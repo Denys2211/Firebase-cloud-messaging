@@ -14,10 +14,10 @@ namespace CloudResourceManager
 
         public static void InitializeFirebaseManagement()
         {
-            var buffer = Convert.FromBase64String(ServiceAccountManager.DataKey.PrivateKeyData);
-            Stream stream = new MemoryStream(buffer);
-            var credential = GoogleCredential.FromStream(stream);
-            //var credential = GoogleCredential.FromFile("private_key.json");
+            //var buffer = Convert.FromBase64String(ServiceAccountManager.DataKey.PrivateKeyData);
+            //Stream stream = new MemoryStream(buffer);
+            //var credential = GoogleCredential.FromStream(stream);
+            var credential = GoogleCredential.FromFile("private_key.json");
             if (CloudManager.Credential.IsCreateScopedRequired)
             {
                 credential = CloudManager.Credential.CreateScoped(FirebaseManagementService.Scope.CloudPlatform);
@@ -25,7 +25,7 @@ namespace CloudResourceManager
             _firebaseManagementService = new FirebaseManagementService(
                new BaseClientService.Initializer()
                {
-
+                  
                    HttpClientInitializer = credential,
                    ApplicationName = CloudManager.ApplicationName
 
@@ -46,11 +46,10 @@ namespace CloudResourceManager
             var body = new AndroidApp()
             {
                 DisplayName = "GamanetAndroid",
-                PackageName = "com.test1.testnotification"
+                PackageName = "com.test1.testnotification",
             };
             var operationAndroid1 = _firebaseManagementService.Projects.AndroidApps.Create(body, "projects/" + CloudManager.ProjectId).Execute();
             WaitOperation(operationAndroid1, nameof(AndroidApp));
-
         }
 
         public static void CreateiOSProject()
@@ -59,7 +58,7 @@ namespace CloudResourceManager
             {
                 DisplayName = "GamanetIOS",
                 BundleId = "com.test1.TestNotification",
-                TeamId = "U7H97X23T2"
+                TeamId = "U7H97X23T2",
             };
             var operationIOS1 = _firebaseManagementService.Projects.IosApps.Create(body, "projects/" + CloudManager.ProjectId).Execute();
             WaitOperation(operationIOS1, nameof(IosApp));
@@ -67,17 +66,19 @@ namespace CloudResourceManager
 
         public static AdminSdkConfig GetAdminConfig()
         {
-            return _firebaseManagementService.Projects.GetAdminSdkConfig("projects/" + CloudManager.ProjectId).Execute();
+            return _firebaseManagementService.Projects.GetAdminSdkConfig("projects/" + CloudManager.ProjectId + "/adminSdkConfig").Execute();
         }
 
         public static AndroidAppConfig GetAndroidConfig()
         {
-            return _firebaseManagementService.Projects.AndroidApps.GetConfig("projects/" + CloudManager.ProjectId).Execute();
+            var listAndroid = _firebaseManagementService.Projects.AndroidApps.List("projects/" + CloudManager.ProjectId + "/androidApps").Execute();
+            return _firebaseManagementService.Projects.AndroidApps.GetConfig("projects/-/androidApps/" + listAndroid.Apps[0].AppId + "/config").Execute();
         }
 
         public static IosAppConfig GetIOSConfig()
         {
-            return _firebaseManagementService.Projects.IosApps.GetConfig("projects/" + CloudManager.ProjectId).Execute();
+            var listIOS = _firebaseManagementService.Projects.IosApps.List("projects/" + CloudManager.ProjectId + "/iosApps").Execute();
+            return _firebaseManagementService.Projects.IosApps.GetConfig("projects/-/iosApps/" + listIOS.Apps[0].AppId + "/config").Execute();
         }
 
         private static void WaitOperation(Operation operation, string name)

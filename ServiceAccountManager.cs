@@ -45,9 +45,12 @@ namespace CloudResourceManager
             _ID = serviceAccount.ProjectId;
             Console.WriteLine("Created service account: " + serviceAccount.Email);
             EnableServiceAccount(serviceAccount.Email);
-            CreateKey(serviceAccount.Email);
+            DataKey = CreateKey(serviceAccount.Email);
             SetAccess(serviceAccount.Email);
-
+        }
+        public static ListServiceAccountsResponse GetListServiceAccount()
+        {
+            return Service.Projects.ServiceAccounts.List("projects/" + CloudManager.ProjectId).Execute();
         }
         public static void DeleteServiceAccount(string email)
         {
@@ -70,15 +73,27 @@ namespace CloudResourceManager
             Service.Projects.ServiceAccounts.Enable(request, resource).Execute();
             Console.WriteLine("Enabled service account: " + email);
         }
-        public static void CreateKey(string serviceAccountEmail)
+        public static ServiceAccountKey CreateKey(string serviceAccountEmail)
         {
             //var listkey = Service.Projects.ServiceAccounts.Keys.List("projects/-/serviceAccounts/" + serviceAccountEmail);
 
-            DataKey = Service.Projects.ServiceAccounts.Keys.Create(
+            var key = Service.Projects.ServiceAccounts.Keys.Create(
                 new CreateServiceAccountKeyRequest(),
                 "projects/-/serviceAccounts/" + serviceAccountEmail)
                 .Execute();
             Console.WriteLine("Created key: " + DataKey.Name);
+            return key;
+        }
+        public static ServiceAccount GetFirebaseServiceAccount()
+        {
+            ServiceAccount account = null;
+            var listSwrveceAccount = GetListServiceAccount();
+            foreach (var item in listSwrveceAccount.Accounts)
+            {
+                if (item.DisplayName == "firebase-adminsdk")
+                    account = item;
+            }
+            return account;
         }
         public static void SetAccess(string serviceAccountEmail)
         {
